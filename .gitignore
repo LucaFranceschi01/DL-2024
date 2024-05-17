@@ -1,2 +1,3 @@
 .venv
 model.ckpt
+my_net.ckpt
