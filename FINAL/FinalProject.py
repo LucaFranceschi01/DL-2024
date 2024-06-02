@@ -15,7 +15,7 @@
 # 
 # NIA 3: 254435
 
-# In[ ]:
+# In[1]:
 
 
 # ideas
@@ -47,7 +47,7 @@ https://arxiv.org/pdf/1503.03832v3
 '''
 
 
-# In[ ]:
+# In[2]:
 
 
 import json
@@ -63,7 +63,7 @@ import torchvision.transforms as transforms
 from torchvision.models import ResNet18_Weights
 
 
-# In[ ]:
+# In[3]:
 
 
 # Comment if not in Google Colab
@@ -77,7 +77,7 @@ data_path = 'data/'
 results_path = 'results/'
 
 
-# In[ ]:
+# In[4]:
 
 
 # Print if gpu acceleration is enabled
@@ -91,7 +91,7 @@ device = (
 print(f"Using {device} device")
 
 
-# In[ ]:
+# In[5]:
 
 
 fixed_seed = 42
@@ -99,7 +99,7 @@ fixed_seed = 42
 
 # # The HDA Doppelgaenger Dataset
 
-# In[ ]:
+# In[6]:
 
 
 class HDA_Doppelgaenger(torch.utils.data.Dataset):
@@ -151,10 +151,10 @@ class HDA_Doppelgaenger(torch.utils.data.Dataset):
         return mean, np.sqrt(sum - np.power(mean, 2))
 
 
-# In[ ]:
+# In[7]:
 
 
-dataset = HDA_Doppelgaenger(seed=fixed_seed)
+dataset = HDA_Doppelgaenger(dataset_version='F_dataset.json')
 
 HDA_mean, HDA_std = dataset.mean_std()
 
@@ -162,10 +162,18 @@ base_transform = transforms.Compose(
     [transforms.ToTensor(),
      transforms.Normalize(HDA_mean, HDA_std)])
 
+augm_transform = transforms.Compose(
+     [transforms.RandomHorizontalFlip(0.5),
+     transforms.RandomGrayscale(0.2),
+     transforms.ColorJitter(0.5, 0.5, 0.5, 0.5),
+     transforms.RandomAffine(45),
+     transforms.ToTensor(),
+     transforms.Normalize(HDA_mean, HDA_std)])
+
 fig, axs = plt.subplots(1, 2, sharex=True, sharey=True)
 
 axs[0].imshow(dataset[0][1])
-dataset.transform = base_transform
+dataset.transform = augm_transform
 
 toimage = transforms.ToPILImage()
 axs[1].imshow(toimage(dataset[0][1]))
@@ -176,7 +184,7 @@ plt.show()
 
 # # Dataloaders
 
-# In[ ]:
+# In[8]:
 
 
 reduction = 10 # the batches' size will be = len(dataset) / reduction
@@ -195,7 +203,7 @@ test_loader = torch.utils.data.DataLoader(dataset=test, batch_size=int(len(test)
 
 # ## Basic ResNet building block
 
-# In[ ]:
+# In[9]:
 
 
 class ResidualBlock(nn.Module):
@@ -235,7 +243,7 @@ class ResidualBlock(nn.Module):
 
 # ## ResNet Architecture
 
-# In[ ]:
+# In[10]:
 
 
 class ResNet(nn.Module):
@@ -318,7 +326,7 @@ class ResNet(nn.Module):
         return x
 
 
-# In[ ]:
+# In[11]:
 
 
 summary(ResNet([2, 2, 2, 2], 1000), input_size=(128,3,256,256))
@@ -326,11 +334,11 @@ summary(ResNet([2, 2, 2, 2], 1000), input_size=(128,3,256,256))
 
 # ## How pretrained weights are loaded
 
-# In[ ]:
+# In[12]:
 
 
 pretrained_weights = ResNet18_Weights.DEFAULT.get_state_dict()
-net = ResNet([2, 2, 2, 2])
+net = ResNet([2, 2, 2, 2]).to(device)
 net.load_state_dict(pretrained_weights)
 # TRY WITH fishernet vgg16
 net.fc = None
@@ -338,7 +346,7 @@ net.fc = None
 
 # # Early Stopper
 
-# In[ ]:
+# In[13]:
 
 
 class EarlyStopper:
@@ -365,7 +373,7 @@ class EarlyStopper:
 
 # # Training function
 
-# In[ ]:
+# In[14]:
 
 
 def validate(net, val_loader):
@@ -396,7 +404,7 @@ def validate(net, val_loader):
     return val_loss_epoch / len(val_loader), loss_list
 
 
-# In[ ]:
+# In[15]:
 
 
 def fit(net, tr_loader, val_loader, epochs=10, optimizer=None, model_name='default.ckpt'):
@@ -410,7 +418,7 @@ def fit(net, tr_loader, val_loader, epochs=10, optimizer=None, model_name='defau
 
     criterion = nn.TripletMarginLoss()
 
-    early_stopper = EarlyStopper(patience=3, min_delta=10)
+    early_stopper = EarlyStopper(patience=3, min_delta=0.1)
 
     for e in range(0, epochs):
 
@@ -454,7 +462,7 @@ def fit(net, tr_loader, val_loader, epochs=10, optimizer=None, model_name='defau
 
 # # Test function
 
-# In[ ]:
+# In[16]:
 
 
 def test(net, test_loader):
@@ -465,9 +473,9 @@ def test(net, test_loader):
         positive = positive.to(device)
         negative = negative.to(device)
 
-        out_anc = net(anchor).flatten().detach().numpy()
-        out_pos = net(positive).flatten().detach().numpy()
-        out_neg = net(negative).flatten().detach().numpy()
+        out_anc = net(anchor).flatten().detach().cpu().numpy()
+        out_pos = net(positive).flatten().detach().cpu().numpy()
+        out_neg = net(negative).flatten().detach().cpu().numpy()
 
         near = np.linalg.norm(out_anc - out_pos, 2)
         far = np.linalg.norm(out_anc - out_neg, 2)
@@ -479,24 +487,24 @@ def test(net, test_loader):
 
 # # Training Loop
 
-# In[ ]:
+# In[21]:
 
 
 learning_rate = 0.001
 optimizer = torch.optim.Adam(net.parameters(), lr = learning_rate, weight_decay=1e-5)
-list_loss = fit(net, train_loader, validation_loader, 1, optimizer=optimizer)
+list_loss = fit(net, train_loader, validation_loader, 10, optimizer=optimizer)
 
 sio.savemat(results_path + 'list_loss.mat', list_loss)
 
 
-# In[ ]:
+# In[18]:
 
 
 # loadedDict = {}
 # sio.loadmat('list_loss.mat', loadedDict)
 
 
-# In[ ]:
+# In[19]:
 
 
 plt.figure(figsize=(10, 5))
@@ -509,7 +517,7 @@ plt.legend()
 plt.show()
 
 
-# In[ ]:
+# In[20]:
 
 
 test(net, test_loader)
