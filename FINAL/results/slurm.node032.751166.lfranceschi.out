@@ -1,0 +1,77 @@
+Using cuda device
+====================================================================================================
+Layer (type:depth-idx)                             Output Shape              Param #
+====================================================================================================
+MobileNetV3                                        [128, 576, 1, 1]          1,615,848
+├─Sequential: 1-1                                  [128, 576, 8, 8]          --
+│    └─Conv2dNormActivation: 2-1                   [128, 16, 128, 128]       --
+│    │    └─Conv2d: 3-1                            [128, 16, 128, 128]       432
+│    │    └─BatchNorm2d: 3-2                       [128, 16, 128, 128]       32
+│    │    └─Hardswish: 3-3                         [128, 16, 128, 128]       --
+│    └─InvertedResidual: 2-2                       [128, 16, 64, 64]         --
+│    │    └─Sequential: 3-4                        [128, 16, 64, 64]         744
+│    └─InvertedResidual: 2-3                       [128, 24, 32, 32]         --
+│    │    └─Sequential: 3-5                        [128, 24, 32, 32]         3,864
+│    └─InvertedResidual: 2-4                       [128, 24, 32, 32]         --
+│    │    └─Sequential: 3-6                        [128, 24, 32, 32]         5,416
+│    └─InvertedResidual: 2-5                       [128, 40, 16, 16]         --
+│    │    └─Sequential: 3-7                        [128, 40, 16, 16]         13,736
+│    └─InvertedResidual: 2-6                       [128, 40, 16, 16]         --
+│    │    └─Sequential: 3-8                        [128, 40, 16, 16]         57,264
+│    └─InvertedResidual: 2-7                       [128, 40, 16, 16]         --
+│    │    └─Sequential: 3-9                        [128, 40, 16, 16]         57,264
+│    └─InvertedResidual: 2-8                       [128, 48, 16, 16]         --
+│    │    └─Sequential: 3-10                       [128, 48, 16, 16]         21,968
+│    └─InvertedResidual: 2-9                       [128, 48, 16, 16]         --
+│    │    └─Sequential: 3-11                       [128, 48, 16, 16]         29,800
+│    └─InvertedResidual: 2-10                      [128, 96, 8, 8]           --
+│    │    └─Sequential: 3-12                       [128, 96, 8, 8]           91,848
+│    └─InvertedResidual: 2-11                      [128, 96, 8, 8]           --
+│    │    └─Sequential: 3-13                       [128, 96, 8, 8]           294,096
+│    └─InvertedResidual: 2-12                      [128, 96, 8, 8]           --
+│    │    └─Sequential: 3-14                       [128, 96, 8, 8]           294,096
+│    └─Conv2dNormActivation: 2-13                  [128, 576, 8, 8]          --
+│    │    └─Conv2d: 3-15                           [128, 576, 8, 8]          55,296
+│    │    └─BatchNorm2d: 3-16                      [128, 576, 8, 8]          1,152
+│    │    └─Hardswish: 3-17                        [128, 576, 8, 8]          --
+├─AdaptiveAvgPool2d: 1-2                           [128, 576, 1, 1]          --
+====================================================================================================
+Total params: 2,542,856
+Trainable params: 2,542,856
+Non-trainable params: 0
+Total mult-adds (G): 9.16
+====================================================================================================
+Input size (MB): 100.66
+Forward/backward pass size (MB): 3782.03
+Params size (MB): 3.71
+Estimated Total Size (MB): 3886.40
+====================================================================================================
+Training mobilenet on dataset with lr=0.0005
+Epoch [   1/  50]  |  Train Loss: 0.96550  |  Validation Loss: 0.94752
+Epoch [   2/  50]  |  Train Loss: 0.89756  |  Validation Loss: 0.88545
+Epoch [   3/  50]  |  Train Loss: 0.78775  |  Validation Loss: 0.74817
+Epoch [   4/  50]  |  Train Loss: 0.69336  |  Validation Loss: 0.73632
+Epoch [   5/  50]  |  Train Loss: 0.61315  |  Validation Loss: 0.80465
+Epoch [   6/  50]  |  Train Loss: 0.54214  |  Validation Loss: 0.91421
+Epoch [   7/  50]  |  Train Loss: 0.52362  |  Validation Loss: 0.79394
+Epoch [   8/  50]  |  Train Loss: 0.40955  |  Validation Loss: 0.33624
+Epoch [   9/  50]  |  Train Loss: 0.34260  |  Validation Loss: 0.15840
+Epoch [  10/  50]  |  Train Loss: 0.25223  |  Validation Loss: 0.28255
+Epoch [  11/  50]  |  Train Loss: 0.17634  |  Validation Loss: 0.34042
+Epoch [  12/  50]  |  Train Loss: 0.13419  |  Validation Loss: 0.66328
+========== Losses ==========
+D:   4.1848  |  ND:   3.0246
+D:   3.7393  |  ND:   4.7230
+D:   4.3533  |  ND:   3.3711
+D:   7.6310  |  ND:   3.3947
+D:   3.5916  |  ND:   3.8135
+D:   3.1624  |  ND:   3.4516
+D:   2.6194  |  ND:   6.6158
+D:   2.8636  |  ND:   3.2932
+D:   4.3101  |  ND:   3.2892
+D:   2.6059  |  ND:   3.8270
+
+======== More stats ========
+Accuracy:             53.60%
+----------- Mean -----------
+D:   4.3829  |  ND:   4.0663
